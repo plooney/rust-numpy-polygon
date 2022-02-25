@@ -56,7 +56,6 @@ fn polygon(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         //let y = arr2(&[[ 6,  5,  4],
         //       [12, 11, 10]]);
         let mut ip = y.slice(s![0, ..]);
-        println!("IP {}", ip[0 as usize]);
         
         for i in 1..num_points+1 {
             let ip_next = if i == num_points {y.slice(s![0, ..])} else {y.slice(s![i, ..])}; 
