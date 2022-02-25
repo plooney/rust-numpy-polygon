@@ -99,8 +99,6 @@ fn polygon(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let mut is_inside = Array1::<i8>::zeros(no_of_points);
         let iter = x.axis_iter(Axis(0)).zip(is_inside.iter_mut());
 
-        println!("No points: {}", no_of_points);
-
         for (p, b) in iter {
             *b = point_in_polygon(p, y);
         }
