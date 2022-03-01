@@ -8,7 +8,7 @@ use pyo3::prelude::{pymodule, PyModule, PyResult, Python};
 #[pymodule]
 fn polygon(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
 
-    fn point_in_polygon(pt: ArrayView1<'_, f64>, y: ArrayView2<'_, f64>) -> i8 {
+    fn point_in_polygon(pt: ArrayView1<'_, i32>, y: ArrayView2<'_, i32>) -> i8 {
         //returns 0 if false, +1 if true, -1 if pt ON polygon boundary
         /*
           int result = 0;
@@ -59,6 +59,7 @@ fn polygon(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         
         for i in 1..num_points+1 {
             let ip_next = if i == num_points {y.slice(s![0, ..])} else {y.slice(s![i, ..])}; 
+            //let ip_next = if i == num_points {y.slice(s![0, ..])} else {y.slice(s![i, ..])}; 
             let ip_x = ip[0 as usize];
             let ip_y = ip[1 as usize];
             if ip_next[1] == pt[1] {
@@ -71,14 +72,14 @@ fn polygon(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
                     if ip_next[0] > pt[0] {result = 1 - result}
                     else {
                         let d = (ip_x-pt[0])*(ip_next[1]-pt[1]) - (ip_next[0]-pt[0])*(ip_y-pt[1]);
-                        if d==0.0 {return -1}
-                        if (d > 0.0) == (ip_next[1] > ip_y) {result = 1 - result}
+                        if d==0 {return -1}
+                        if (d > 0) == (ip_next[1] > ip_y) {result = 1 - result}
                     }
                 } else {
                     if ip_next[0] > pt[0] {
                         let d = (ip_x-pt[0])*(ip_next[1]-pt[1]) - (ip_next[0]-pt[0])*(ip_y-pt[1]);
-                        if d==0.0 {return -1}
-                        if (d > 0.0) == (ip_next[1] > ip_y) {result = 1 - result}
+                        if d==0 {return -1}
+                        if (d > 0) == (ip_next[1] > ip_y) {result = 1 - result}
                     }
                 }
             }
@@ -89,7 +90,7 @@ fn polygon(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
 
     #[pyfn(m)]
     #[pyo3(name = "points_in_polygon")]
-    fn points_in_polygon<'py>(py: Python<'py>, x: &PyArray2<f64>, y: &PyArray2<f64>) -> &'py PyArray1<i8> {
+    fn points_in_polygon<'py>(py: Python<'py>, x: &PyArray2<i32>, y: &PyArray2<i32>) -> &'py PyArray1<i8> {
         let x = x.readonly();
         let x = x.as_array();
         let y = y.readonly();
