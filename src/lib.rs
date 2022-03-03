@@ -1,9 +1,11 @@
 extern crate numpy;
 extern crate pyo3;
+extern crate clipper;
 
 use numpy::ndarray::{Array1, ArrayView1, ArrayView2, Axis, s};
 use numpy::{IntoPyArray, PyArray2, PyArray1};
 use pyo3::prelude::{pymodule, PyModule, PyResult, Python};
+use clipper::{is_point_in_path, Path, point};
 
 #[pymodule]
 fn polygon(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
@@ -59,7 +61,6 @@ fn polygon(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         
         for i in 1..num_points+1 {
             let ip_next = if i == num_points {y.slice(s![0, ..])} else {y.slice(s![i, ..])}; 
-            //let ip_next = if i == num_points {y.slice(s![0, ..])} else {y.slice(s![i, ..])}; 
             let ip_x = ip[0 as usize];
             let ip_y = ip[1 as usize];
             if ip_next[1] == pt[1] {
@@ -103,6 +104,23 @@ fn polygon(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         for (p, b) in iter {
             *b = point_in_polygon(p, y);
         }
+        is_inside.into_pyarray(py)
+    }
+
+    #[pyfn(m)]
+    #[pyo3(name = "points_in_polygon_new")]
+    fn points_in_polygon_new<'py>(py: Python<'py>, x: &PyArray2<i64>, y: &PyArray2<i64>) -> &'py PyArray1<i8> {
+        let x = x.readonly();
+        let x = x.as_array();
+        let y = y.readonly();
+        let y = y.as_array();
+        let vec = y.axis_iter(Axis(0)).map(|x| point::IntPoint::new(x[0], x[1])).collect::<Vec<point::IntPoint2d>>();
+        println!("{:?}", vec.len());
+
+        let path = Path{poly: vec};
+        let points = x.axis_iter(Axis(0)).map(|x| point::IntPoint2d{ x:x[0], y:x[1] });
+        let is_inside = points.map(|x| is_point_in_path(&x, &path)).collect::<Vec<i8>>();
+
         is_inside.into_pyarray(py)
     }
 
