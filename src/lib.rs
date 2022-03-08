@@ -115,7 +115,6 @@ fn polygon(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let y = y.readonly();
         let y = y.as_array();
         let vec = y.axis_iter(Axis(0)).map(|x| point::IntPoint::new(x[0], x[1])).collect::<Vec<point::IntPoint2d>>();
-        println!("{:?}", vec.len());
 
         let path = Path{poly: vec};
         let points = x.axis_iter(Axis(0)).map(|x| point::IntPoint2d{ x:x[0], y:x[1] });
