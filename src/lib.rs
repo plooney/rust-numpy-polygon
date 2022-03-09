@@ -6,6 +6,7 @@ use numpy::ndarray::{Array1, ArrayView1, ArrayView2, Axis, s};
 use numpy::{IntoPyArray, PyArray2, PyArray1};
 use pyo3::prelude::{pymodule, PyModule, PyResult, Python};
 use clipper::{is_point_in_path, Path, point};
+use numpy::ndarray::azip;
 
 #[pymodule]
 fn polygon(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
@@ -121,6 +122,30 @@ fn polygon(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let is_inside = points.map(|x| is_point_in_path(&x, &path)).collect::<Vec<i8>>();
 
         is_inside.into_pyarray(py)
+    }
+
+    #[pyfn(m)]
+    #[pyo3(name = "points_in_polygon_mut")]
+    fn points_in_polygon_mut<'py>(_py: Python<'py>, x: &PyArray2<i64>, y: &PyArray2<i64>, res_py: &PyArray1<i8>, inds_py: &PyArray1<bool>) {
+        let x = x.readonly();
+        let x = x.as_array();
+        let y = y.readonly();
+        let y = y.as_array();
+        let vec = y.axis_iter(Axis(0)).map(|x| point::IntPoint::new(x[0], x[1])).collect::<Vec<point::IntPoint2d>>();
+        let mut res = unsafe { res_py.as_array_mut() };
+        let inds = inds_py.readonly();
+        let inds = inds.as_array();
+
+        let path = Path{poly: vec};
+        let points = x.axis_iter(Axis(0)).map(|x| point::IntPoint2d{ x:x[0], y:x[1] }).collect::<Vec<point::IntPoint2d>>();
+        azip!((r in &mut res, ind in &inds, &p in &points) *r = mut_is_point_in_path(&p, &path, ind));
+    }
+
+    fn mut_is_point_in_path(x: &point::IntPoint2d, path: &Path<point::IntPoint2d>, ind: &bool) -> i8 {
+        if *ind {
+            return is_point_in_path(x, path);
+        }
+        return 0;
     }
 
     Ok(())
