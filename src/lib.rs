@@ -146,7 +146,8 @@ fn polygon(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
 
     fn mut_is_point_in_path(x: &point::IntPoint2d, path: &Path<point::IntPoint2d>, ind: &bool, r: &mut u8) {
         if *ind {
-            *r += is_point_in_path(x, path).abs() as u8 % 2;
+            *r += is_point_in_path(x, path).abs() as u8;
+            *r = *r % 2;
         }
     }
 
