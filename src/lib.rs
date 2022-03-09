@@ -138,14 +138,13 @@ fn polygon(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
 
         let path = Path{poly: vec};
         let points = x.axis_iter(Axis(0)).map(|x| point::IntPoint2d{ x:x[0], y:x[1] }).collect::<Vec<point::IntPoint2d>>();
-        azip!((r in &mut res, ind in &inds, &p in &points) *r = mut_is_point_in_path(&p, &path, ind));
+        azip!((r in &mut res, ind in &inds, &p in &points) mut_is_point_in_path(&p, &path, ind, r));
     }
 
-    fn mut_is_point_in_path(x: &point::IntPoint2d, path: &Path<point::IntPoint2d>, ind: &bool) -> i8 {
+    fn mut_is_point_in_path(x: &point::IntPoint2d, path: &Path<point::IntPoint2d>, ind: &bool, r: &mut i8) {
         if *ind {
-            return is_point_in_path(x, path);
+            *r += is_point_in_path(x, path);
         }
-        return 0;
     }
 
     Ok(())
