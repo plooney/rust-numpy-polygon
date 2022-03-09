@@ -1,12 +1,15 @@
 extern crate numpy;
+extern crate ndarray;
 extern crate pyo3;
 extern crate clipper;
+extern crate rayon;
 
 use numpy::ndarray::{Array1, ArrayView1, ArrayView2, Axis, s};
 use numpy::{IntoPyArray, PyArray2, PyArray1};
 use pyo3::prelude::{pymodule, PyModule, PyResult, Python};
 use clipper::{is_point_in_path, Path, point};
 use numpy::ndarray::azip;
+use numpy::ndarray::par_azip;
 
 #[pymodule]
 fn polygon(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
@@ -138,7 +141,7 @@ fn polygon(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
 
         let path = Path{poly: vec};
         let points = x.axis_iter(Axis(0)).map(|x| point::IntPoint2d{ x:x[0], y:x[1] }).collect::<Vec<point::IntPoint2d>>();
-        azip!((r in &mut res, ind in &inds, &p in &points) mut_is_point_in_path(&p, &path, ind, r));
+        par_azip!((r in &mut res, ind in &inds, &p in &points) mut_is_point_in_path(&p, &path, ind, r));
     }
 
     fn mut_is_point_in_path(x: &point::IntPoint2d, path: &Path<point::IntPoint2d>, ind: &bool, r: &mut i8) {
