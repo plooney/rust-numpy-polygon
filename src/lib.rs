@@ -129,7 +129,7 @@ fn polygon(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
 
     #[pyfn(m)]
     #[pyo3(name = "points_in_polygon_mut")]
-    fn points_in_polygon_mut<'py>(_py: Python<'py>, x: &PyArray2<i64>, y: &PyArray2<i64>, res_py: &PyArray1<i8>, inds_py: &PyArray1<bool>) {
+    fn points_in_polygon_mut<'py>(_py: Python<'py>, x: &PyArray2<i64>, y: &PyArray2<i64>, res_py: &PyArray1<u8>, inds_py: &PyArray1<bool>) {
         let x = x.readonly();
         let x = x.as_array();
         let y = y.readonly();
@@ -144,9 +144,9 @@ fn polygon(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         par_azip!((r in &mut res, ind in &inds, &p in &points) mut_is_point_in_path(&p, &path, ind, r));
     }
 
-    fn mut_is_point_in_path(x: &point::IntPoint2d, path: &Path<point::IntPoint2d>, ind: &bool, r: &mut i8) {
+    fn mut_is_point_in_path(x: &point::IntPoint2d, path: &Path<point::IntPoint2d>, ind: &bool, r: &mut u8) {
         if *ind {
-            *r += is_point_in_path(x, path);
+            *r += is_point_in_path(x, path).abs() as u8;
         }
     }
 
