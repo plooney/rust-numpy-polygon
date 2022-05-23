@@ -12,5 +12,5 @@ numpy = "0.16.1"
 rayon = "1.5.1"
 ndarray = {version="0.15.4", features = ["rayon"]}
 pyo3 = { version = "0.16.1", features = ["extension-module"] }
-clipper = { git = "https://github.com/plooney/clipper-rs", branch = "master" }
+clip-rs = { git = "https://github.com/plooney/clip-rs", branch = "main" }
 #clipper = { path = "../clipper-rs" }

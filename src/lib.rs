@@ -1,14 +1,15 @@
 extern crate numpy;
 extern crate ndarray;
 extern crate pyo3;
-extern crate clipper;
+extern crate clip_rs;
 extern crate rayon;
 
 use numpy::ndarray::{Axis, s};
 use numpy::{IntoPyArray, PyArray2, PyArray1};
 use pyo3::prelude::{pymodule, PyModule, PyResult, Python};
-use clipper::{is_point_in_path, Path, point};
+use clip_rs::{is_point_in_path, Path, point};
 use numpy::ndarray::par_azip;
+use clip_rs::point::Coords;
 
 #[pymodule]
 fn polygon(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
@@ -20,10 +21,9 @@ fn polygon(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let x = x.as_array();
         let y = y.readonly();
         let y = y.as_array();
-        let vec = y.axis_iter(Axis(0)).map(|x| point::DoublePoint::new(x[0], x[1])).collect::<Vec<point::DoublePoint2d>>();
+        let path = y.axis_iter(Axis(0)).map(|x| point::DoublePoint::new(x[0], x[1])).collect::<Path>();
 
-        let path = Path{poly: vec};
-        let points = x.axis_iter(Axis(0)).map(|x| point::DoublePoint2d{ x:x[0], y:x[1] });
+        let points = x.axis_iter(Axis(0)).map(|x| point::DoublePoint{ x:x[0], y:x[1] });
         let is_inside = points.map(|x| is_point_in_path(&x, &path)).collect::<Vec<i8>>();
 
         is_inside.into_pyarray(py)
@@ -36,17 +36,16 @@ fn polygon(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let x = x.as_array();
         let y = y.readonly();
         let y = y.as_array();
-        let vec = y.axis_iter(Axis(0)).map(|x| point::DoublePoint::new(x[0], x[1])).collect::<Vec<point::DoublePoint2d>>();
+        let path = y.axis_iter(Axis(0)).map(|x| point::DoublePoint::new(x[0], x[1])).collect::<Path>();
         let mut res = unsafe { res_py.as_array_mut() };
         let inds = inds_py.readonly();
         let inds = inds.as_array();
 
-        let path = Path{poly: vec};
-        let points = x.axis_iter(Axis(0)).map(|x| point::DoublePoint2d{ x:x[0], y:x[1] }).collect::<Vec<point::DoublePoint2d>>();
+        let points = x.axis_iter(Axis(0)).map(|x| point::DoublePoint{ x:x[0], y:x[1] }).collect::<Path>();
         par_azip!((r in &mut res, ind in &inds, &p in &points) mut_is_point_in_path(&p, &path, ind, r));
     }
 
-    fn mut_is_point_in_path(x: &point::DoublePoint2d, path: &Path<point::DoublePoint2d>, ind: &bool, r: &mut u8) {
+    fn mut_is_point_in_path(x: &point::DoublePoint, path: &Path, ind: &bool, r: &mut u8) {
         if *ind {
             *r += is_point_in_path(x, path).abs() as u8;
             *r = *r % 2;
